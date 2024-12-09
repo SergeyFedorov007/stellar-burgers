@@ -13,7 +13,7 @@ export type TIngredient = {
 };
 
 export type TConstructorIngredient = TIngredient & {
-  uniqueId: string;
+  id: string;
 };
 
 export type TOrder = {
