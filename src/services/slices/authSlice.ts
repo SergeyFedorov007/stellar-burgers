@@ -7,15 +7,13 @@ import {
   forgotPasswordApi,
   resetPasswordApi,
   updateUserApi,
-  fetchWithRefresh,
   TRegisterData,
   TLoginData,
-  TRefreshResponse,
   TAuthResponse,
   TUserResponse
 } from '@api';
 import { TUser } from '@utils-types';
-import { RootState } from '../../services/store';
+import { RootState } from '../store';
 import { deleteCookie, setCookie } from '../../utils/cookie';
 
 // Интерфейсы
@@ -37,14 +35,27 @@ const authInitialState: AuthState = {
 export const selectAuthState = (state: RootState) => state.auth;
 export const selectUser = (state: RootState): TUser | null => state.auth.user;
 
-// Thunk для отправки запросов с автоматическим обновлением токенов
-export const fetchWithRefreshThunk = createAsyncThunk<
-  TRefreshResponse,
-  { url: string; options: RequestInit }
->('api/fetchWithRefresh', async ({ url, options }, {}) => {
-  const data = await fetchWithRefresh<TRefreshResponse>(url, options);
-  return data;
-});
+// Thunk для проверки авторизации
+export const checkAuthStatus = createAsyncThunk(
+  'auth/checkAuthStatus',
+  async (refreshToken: string) => {
+    const response = await fetch('/api/refresh', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ refreshToken })
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data?.accessToken) {
+      return { accessToken: data.accessToken, user: data.user }; // возвращаем токен и данные пользователя
+    } else {
+      throw new Error('Ошибка проверки авторизации');
+    }
+  }
+);
 
 // Thunk для аутентификации пользователя
 export const loginUser = createAsyncThunk<TAuthResponse, TLoginData>(
@@ -219,6 +230,23 @@ const authSlice = createSlice({
       .addCase(logoutUser.rejected, (state, action) => {
         console.error('Ошибка выхода:', action.error);
         state.loading = false;
+      })
+
+      // Добавляем обработку для проверки авторизации
+      .addCase(checkAuthStatus.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(checkAuthStatus.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+        setCookie('accessToken', action.payload.accessToken);
+        setCookie('userData', JSON.stringify(action.payload.user));
+      })
+      .addCase(checkAuthStatus.rejected, (state) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.user = null;
       });
   }
 });

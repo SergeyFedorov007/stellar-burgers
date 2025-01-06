@@ -3,17 +3,19 @@ import styles from './app.module.css';
 
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { AppHeader } from '@components';
-import { ConstructorPage } from '../../pages/constructor-page';
-import { Feed } from '../../pages/feed';
-import { Login } from '../../pages/login';
-import { Register } from '../../pages/register';
-import { ForgotPassword } from '../../pages/forgot-password';
-import { ResetPassword } from '../../pages/reset-password';
-import { Profile } from '../../pages/profile';
-import { ProfileOrders } from '../../pages/profile-orders';
-import { NotFound404 } from '../../pages/not-fount-404';
+import {
+  ConstructorPage,
+  Feed,
+  Login,
+  Register,
+  ForgotPassword,
+  ResetPassword,
+  Profile,
+  ProfileOrders,
+  NotFound404
+} from '@pages';
 import { Modal } from '../modal';
-import { IngredientDetails } from '../ingredient-details';
+import { IngredientDetails } from '@components';
 import ProtectedRoute from '../route';
 import { FeedWithModal, ProfileOrderWithModal } from '../modal/numberModal';
 import { useEffect } from 'react';
@@ -36,6 +38,8 @@ const App = () => {
   return (
     <div className={styles.app}>
       <AppHeader />
+
+      {/* Основные маршруты */}
       <Routes location={background || location}>
         <Route path='/' element={<ConstructorPage />} />
         <Route path='/feed' element={<Feed />} />
@@ -87,33 +91,33 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        {/* Отображаем NotFound404 только если не найден ни один маршрут */}
         <Route path='*' element={<NotFound404 />} />
       </Routes>
 
-      {background && (
-        <Routes>
-          <Route path='/feed/:number' element={<FeedWithModal />} />
-          <Route
-            path='/ingredients/:id'
-            element={
-              <Modal
-                title='Детали ингредиентов'
-                onClose={() => {
-                  navigate('/');
-                }}
-              >
-                <IngredientDetails />
-              </Modal>
-            }
-          />
-          <Route
-            path='/profile/orders/:number'
-            element={<ProfileOrderWithModal />}
-          />
-        </Routes>
-      )}
+      {/* Модальные окна */}
+      <Routes>
+        <Route path='/feed/:number' element={<FeedWithModal />} />
+        <Route
+          path='/ingredients/:id'
+          element={
+            <Modal
+              title='Детали ингредиентов'
+              onClose={() => {
+                navigate('/');
+              }}
+            >
+              <IngredientDetails />
+            </Modal>
+          }
+        />
+        <Route
+          path='/profile/orders/:number'
+          element={<ProfileOrderWithModal />}
+        />
+      </Routes>
     </div>
   );
 };
-//TODO: прыгают модалки с заказами
+
 export default App;
