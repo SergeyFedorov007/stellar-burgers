@@ -12,5 +12,5 @@ export type BurgerIngredientsUIProps = {
   bunsRef: (node?: Element | null | undefined) => void;
   mainsRef: (node?: Element | null | undefined) => void;
   saucesRef: (node?: Element | null | undefined) => void;
-  onTabClick: (val: string) => void;
+  onTabClick: (val: TTabMode) => void;
 };
